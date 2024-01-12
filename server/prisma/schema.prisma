@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  userName String @unique
+  email String @unique
+  passwordHash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  calendar Calendar?
+  sessions Session[]
+  notifications Notification[]
+  eventAttendee EventAttendee[]
+}
+
+model Session {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  refreshToken String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+
+model Calendar {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int @unique
+  settings Json @default("{}")
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt
+  events Event[]
+  @@index([userId])
+}
+
+model Event {
+  id Int @id @default(autoincrement())
+  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  calendarId Int
+  title String
+  description String?
+  location String?
+  color String @default("#FFFFFF")
+  startTime DateTime
+  endTime DateTime
+  allDay Boolean @default(false)
+  eventType String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recurring RecurringEvent[]
+  notifications Notification[]
+  eventAttendees EventAttendee[] 
+  @@index([calendarId])
+}
+
+model EventAttendee {
+  id Int @id @default(autoincrement())
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId Int
+  attendee User @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
+  attendeeId Int
+  status String // Could be 'invited', 'accepted', 'declined'
+  createdAt DateTime @default(now())
+  notifications Notification[]
+  @@index([eventId])
+}
+
+model RecurringEvent {
+  id Int @id @default(autoincrement())
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId Int
+  pattern String
+  startDate DateTime?
+  endDate DateTime?
+  numberOfOccurrences Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([eventId])
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  eventAttendee EventAttendee? @relation(fields: [eventAttendeeId], references: [id], onDelete: Cascade)
+  eventAttendeeId Int?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId Int
+  type String // 'INVITATION' or 'REMINDER'
+  sent Boolean @default(false)
+  sendAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([eventId])
+}

@@ -1,0 +1,12 @@
+.isToday {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #6e47e5;
+  transform: translateY(1rem) translateX(0.6rem);
+  z-index: -10;
+}
+
+.today {
+  border-color: #6e47e5;
+}
